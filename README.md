@@ -15,7 +15,8 @@ grupos, fontes e critérios continua sendo feito no app do celular.
 | **Ouvir** | Leitura em voz alta com o motor de voz do relógio: pausar, pular, voltar, volume. Continua com a tela apagada e responde aos botões do fone Bluetooth. |
 | **Configuração** | O ID do projeto Firebase. É a única configuração. |
 
-Ouvir um artigo até o fim marca como lido, igual ao modo podcast do celular.
+Ouvir um artigo até o fim marca como lido no Firestore, igual ao modo podcast
+do celular; se a rede falhar, o relógio tenta de novo por alguns segundos.
 Ler o resumo não marca sozinho. Como no celular, o pipeline apaga lidos não
 favoritados no ciclo seguinte; favoritar protege o artigo.
 

@@ -146,7 +146,7 @@ fun NewsFlowApp() {
                             val index = list.indexOfFirst { it.id == article.id }
                             if (index >= 0) listen(list, index) else listen(listOf(article), 0)
                         },
-                        onClose = { navController.popBackStack() },
+                        onClose = { navController.popBackStack(Routes.ARTICLE, inclusive = true) },
                     )
                 }
                 composable(Routes.PLAYER) {

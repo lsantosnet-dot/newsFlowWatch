@@ -9,6 +9,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -53,6 +54,9 @@ class NewsRepository(
     val groups = MutableStateFlow(GroupsState())
     val feed = MutableStateFlow(FeedState())
     val article = MutableStateFlow<Article?>(null)
+
+    /** Artigos marcados como lidos nesta sessão (pelo botão ou por terem sido ouvidos até o fim). */
+    val readIds = MutableStateFlow<Set<String>>(emptySet())
 
     /** Avisos curtos para mostrar ao usuário (toast). */
     val messages = MutableSharedFlow<String>(extraBufferCapacity = 4)
@@ -192,14 +196,39 @@ class NewsRepository(
         val wasListed = feed.value.articles.any { it.id == article.id }
         feed.update { it.copy(articles = it.articles.filterNot { a -> a.id == article.id }) }
         if (wasListed && profileId != null) setCount(profileId) { it - 1 }
+        readIds.update { it + article.id }
         scope.launch {
             try {
-                withContext(Dispatchers.IO) { api().markRead(article) }
+                writeWithRetry { api().markRead(article) }
             } catch (e: Exception) {
+                readIds.update { it - article.id }
                 messages.tryEmit("Não marcou como lido: ${describe(e)}")
                 refreshFeed()
             }
         }
+    }
+
+    /**
+     * Grava com novas tentativas quando a falha é de rede. Ao terminar de ouvir
+     * um artigo a tela costuma estar apagada e o Wi‑Fi do relógio, dormindo: a
+     * primeira chamada pode falhar só porque a conexão ainda está acordando.
+     * Erros que o Firestore devolveu (4xx) não adianta repetir.
+     */
+    private suspend fun writeWithRetry(write: () -> Unit) {
+        var lastError: Exception? = null
+        for (waitMillis in RETRY_WAITS_MILLIS) {
+            if (waitMillis > 0) delay(waitMillis)
+            try {
+                withContext(Dispatchers.IO) { write() }
+                return
+            } catch (e: ApiException) {
+                if (e.code in 400..499) throw e
+                lastError = e
+            } catch (e: IOException) {
+                lastError = e
+            }
+        }
+        throw lastError ?: IOException("falha de rede")
     }
 
     fun toggleFavorite(article: Article) {
@@ -207,7 +236,7 @@ class NewsRepository(
         replace(article.copy(favorite = next))
         scope.launch {
             try {
-                withContext(Dispatchers.IO) { api().setFavorite(article, next) }
+                writeWithRetry { api().setFavorite(article, next) }
                 if (next) messages.tryEmit("Guardado para ler no celular")
             } catch (e: Exception) {
                 replace(article)
@@ -237,5 +266,6 @@ class NewsRepository(
     companion object {
         const val PAGE_SIZE = 8
         private const val KEY_PROJECT = "project_id"
+        private val RETRY_WAITS_MILLIS = longArrayOf(0, 2_000, 5_000, 15_000)
     }
 }

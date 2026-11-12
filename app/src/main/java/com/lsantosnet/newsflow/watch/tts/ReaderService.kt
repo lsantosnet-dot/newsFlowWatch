@@ -188,9 +188,24 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         publish()
     }
 
+    /** O artigo foi ouvido até o fim: marca como lido no Firestore e segue a fila. */
     private fun articleFinished() {
-        Player.state.value.current?.let { repository.markRead(it) }
+        Player.state.value.current?.let {
+            holdAwakeForWrite()
+            repository.markRead(it)
+        }
         advance(1)
+    }
+
+    /**
+     * Mantém o relógio acordado pelo tempo das tentativas de gravação. Sem
+     * isto, no último artigo da fila o serviço encerra, solta o wake lock da
+     * leitura e o aparelho pode dormir antes de o "lido" chegar ao Firestore.
+     */
+    private fun holdAwakeForWrite() {
+        getSystemService(PowerManager::class.java)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "newsflow:mark-read")
+            .acquire(WRITE_WINDOW_MILLIS)
     }
 
     /** Vai para outro artigo da fila; passar do último encerra a leitura. */
@@ -349,6 +364,7 @@ class ReaderService : Service(), TextToSpeech.OnInitListener {
         private const val CHANNEL = "reader"
         private const val NOTIFICATION_ID = 1
         private const val MAX_SESSION_MILLIS = 2 * 60 * 60 * 1000L
+        private const val WRITE_WINDOW_MILLIS = 40_000L
 
         private const val ACTION_PLAY = "play"
         private const val ACTION_PAUSE = "pause"

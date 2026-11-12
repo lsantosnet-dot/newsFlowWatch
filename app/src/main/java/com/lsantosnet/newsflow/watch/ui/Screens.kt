@@ -260,7 +260,12 @@ fun FeedScreen(onOpenArticle: (Article) -> Unit, onListenAll: () -> Unit, onOpen
 fun ArticleScreen(onListen: (Article) -> Unit, onClose: () -> Unit) {
     val repository = LocalContext.current.repository
     val current by repository.article.collectAsState()
+    val readIds by repository.readIds.collectAsState()
     val article = current ?: return
+
+    // Marcado como lido (pelo botão ou por ter sido ouvido até o fim): fecha a tela.
+    val isRead = article.id in readIds
+    LaunchedEffect(isRead) { if (isRead) onClose() }
 
     WatchList {
         item {
@@ -313,10 +318,7 @@ fun ArticleScreen(onListen: (Article) -> Unit, onClose: () -> Unit) {
         }
         item {
             FilledTonalButton(
-                onClick = {
-                    repository.markRead(article)
-                    onClose()
-                },
+                onClick = { repository.markRead(article) },
                 modifier = Modifier.fillMaxWidth(),
                 icon = { Icon(Icons.Rounded.Check, contentDescription = null) },
                 label = { Text("Marcar como lido") },
