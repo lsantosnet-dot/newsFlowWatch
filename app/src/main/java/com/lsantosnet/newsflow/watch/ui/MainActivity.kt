@@ -1,6 +1,7 @@
 package com.lsantosnet.newsflow.watch.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -28,7 +29,29 @@ import com.lsantosnet.newsflow.watch.tts.ReaderService
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        applyProjectIdFrom(intent)
         setContent { NewsFlowApp() }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        applyProjectIdFrom(intent)
+    }
+
+    /**
+     * Define o ID do projeto pelo computador, para não depender do teclado do
+     * relógio (que em alguns aparelhos não tem números nem hífen):
+     * `adb shell am start -n com.lsantosnet.newsflow.watch/.ui.MainActivity --es project_id SEU-PROJETO`
+     */
+    private fun applyProjectIdFrom(intent: Intent?) {
+        val id = intent?.getStringExtra(EXTRA_PROJECT_ID) ?: return
+        intent.removeExtra(EXTRA_PROJECT_ID)
+        val message = if (repository.setProjectId(id)) "Projeto salvo: ${repository.projectId.value}" else "ID de projeto inválido"
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    private companion object {
+        const val EXTRA_PROJECT_ID = "project_id"
     }
 }
 

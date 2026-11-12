@@ -31,6 +31,13 @@ e `favorite`, que são exatamente as três escritas do relógio. Por isso basta 
 - no relógio, pode ser digitado ou ditado em **Configuração**, o que vale mais
   que o do build.
 
+O teclado de alguns relógios não oferece números nem hífen. Nesse caso, defina
+o ID pelo computador, com o relógio conectado por `adb`:
+
+```bash
+adb shell am start -n com.lsantosnet.newsflow.watch/.ui.MainActivity --es project_id SEU-PROJETO
+```
+
 Nada precisa mudar no pipeline, nas regras ou nos índices. A lista usa o índice
 `(profile_id, read, relevance_score desc, curated_at desc)` que o NewsFlow já publica.
 

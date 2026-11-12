@@ -102,7 +102,7 @@ fun SettingsScreen() {
             }
             item {
                 Text(
-                    text = "Só o ID do projeto fica no relógio, sem chave. Grupos e fontes são editados no celular.",
+                    text = "Só o ID do projeto fica no relógio, sem chave. Se o teclado não tiver números, defina pelo computador com adb (veja o README).",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
