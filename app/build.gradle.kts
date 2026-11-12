@@ -77,8 +77,6 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.8")
     // Indicador de "atividade em andamento" no mostrador durante a leitura em voz alta.
     implementation("androidx.wear:wear-ongoing:1.1.0")
-    // Teclado/ditado do sistema para digitar o ID do projeto.
-    implementation("androidx.wear:wear-input:1.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     testImplementation("junit:junit:4.13.2")

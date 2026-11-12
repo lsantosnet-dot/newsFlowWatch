@@ -1,9 +1,5 @@
 package com.lsantosnet.newsflow.watch.ui
 
-import android.app.RemoteInput
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,11 +18,8 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
-import androidx.wear.input.RemoteInputIntentHelper
 import com.lsantosnet.newsflow.watch.BuildConfig
 import com.lsantosnet.newsflow.watch.repository
-
-private const val KEY_PROJECT_ID = "project_id"
 
 /**
  * Única configuração do relógio: de qual projeto Firebase ler.
@@ -36,35 +29,10 @@ private const val KEY_PROJECT_ID = "project_id"
  * basta. Grupos, fontes e critérios continuam sendo editados no celular.
  */
 @Composable
-fun SettingsScreen() {
-    val context = LocalContext.current
-    val repository = context.repository
+fun SettingsScreen(onEditProjectId: () -> Unit) {
+    val repository = LocalContext.current.repository
     val projectId by repository.projectId.collectAsState()
     val listState = rememberScalingLazyListState()
-
-    // Abre o teclado (ou o ditado) do próprio sistema do relógio.
-    val textEntry = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        val typed = result.data
-            ?.let { RemoteInput.getResultsFromIntent(it) }
-            ?.getCharSequence(KEY_PROJECT_ID)
-            ?.toString()
-            ?: return@rememberLauncherForActivityResult
-        val message = if (repository.setProjectId(typed)) {
-            "Projeto salvo"
-        } else {
-            "ID inválido. Use letras minúsculas, números e hífen."
-        }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-    }
-
-    fun askProjectId() {
-        val intent = RemoteInputIntentHelper.createActionRemoteInputIntent()
-        RemoteInputIntentHelper.putRemoteInputsExtra(
-            intent,
-            listOf(RemoteInput.Builder(KEY_PROJECT_ID).setLabel("ID do projeto Firebase").build()),
-        )
-        textEntry.launch(intent)
-    }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, contentPadding = contentPadding, modifier = Modifier.fillMaxSize()) {
@@ -86,7 +54,7 @@ fun SettingsScreen() {
             }
             item {
                 Button(
-                    onClick = { askProjectId() },
+                    onClick = onEditProjectId,
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(if (projectId.isBlank()) "Digitar o ID" else "Trocar o ID") },
                 )
@@ -102,7 +70,7 @@ fun SettingsScreen() {
             }
             item {
                 Text(
-                    text = "Só o ID do projeto fica no relógio, sem chave. Se o teclado não tiver números, defina pelo computador com adb (veja o README).",
+                    text = "Só o ID do projeto fica no relógio, sem chave. Grupos e fontes são editados no celular.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,

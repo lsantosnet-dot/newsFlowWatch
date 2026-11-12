@@ -39,8 +39,7 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Define o ID do projeto pelo computador, para não depender do teclado do
-     * relógio (que em alguns aparelhos não tem números nem hífen):
+     * Define o ID do projeto pelo computador, como alternativa a digitar no relógio:
      * `adb shell am start -n com.lsantosnet.newsflow.watch/.ui.MainActivity --es project_id SEU-PROJETO`
      */
     private fun applyProjectIdFrom(intent: Intent?) {
@@ -61,6 +60,7 @@ private object Routes {
     const val ARTICLE = "article"
     const val PLAYER = "player"
     const val SETTINGS = "settings"
+    const val PROJECT_ID = "project_id"
 }
 
 /** Âmbar sobre preto: legível em OLED e econômico em bateria. */
@@ -152,7 +152,24 @@ fun NewsFlowApp() {
                 composable(Routes.PLAYER) {
                     PlayerScreen(onClosed = { navController.popBackStack(Routes.PLAYER, inclusive = true) })
                 }
-                composable(Routes.SETTINGS) { SettingsScreen() }
+                composable(Routes.SETTINGS) {
+                    SettingsScreen(onEditProjectId = { navController.navigate(Routes.PROJECT_ID) })
+                }
+                composable(Routes.PROJECT_ID) {
+                    ProjectIdKeyboardScreen(
+                        initial = repository.projectId.value,
+                        onConfirm = { typed ->
+                            val saved = repository.setProjectId(typed)
+                            Toast.makeText(
+                                context,
+                                if (saved) "Projeto salvo" else "ID inválido: 6 a 30 caracteres, começando por letra",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                            if (saved) navController.popBackStack()
+                            saved
+                        },
+                    )
+                }
             }
         }
     }

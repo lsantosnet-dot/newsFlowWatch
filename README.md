@@ -28,11 +28,11 @@ e `favorite`, que são exatamente as três escritas do relógio. Por isso basta 
 
 - no build, vem de `-PfirebaseProjectId=...` ou da variável de ambiente
   `FIREBASE_PROJECT_ID`;
-- no relógio, pode ser digitado ou ditado em **Configuração**, o que vale mais
-  que o do build.
+- no relógio, pode ser digitado em **Configuração**, o que vale mais que o do
+  build. A tela tem um teclado próprio com letras, números e hífen, porque o
+  teclado do sistema de alguns relógios não oferece números.
 
-O teclado de alguns relógios não oferece números nem hífen. Nesse caso, defina
-o ID pelo computador, com o relógio conectado por `adb`:
+Também dá para definir o ID pelo computador, com o relógio conectado por `adb`:
 
 ```bash
 adb shell am start -n com.lsantosnet.newsflow.watch/.ui.MainActivity --es project_id SEU-PROJETO
@@ -94,7 +94,8 @@ app/src/main/java/com/lsantosnet/newsflow/watch
   ├── tts/ReaderService.kt     # Fila de leitura: TTS, tela apagada, sessão de mídia
   ├── ui/MainActivity.kt       # Navegação e tema
   ├── ui/Screens.kt            # Grupos, Lista, Artigo, Ouvir
-  └── ui/SettingsScreen.kt     # ID do projeto
+  ├── ui/SettingsScreen.kt     # ID do projeto
+  └── ui/ProjectIdKeyboard.kt  # Teclado próprio (letras, números e hífen)
 app/src/test/.../FirestoreJsonTest.kt   # Testes de JVM do formato das consultas e respostas
 ```
 
